@@ -1,2 +1,17 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# This is a static website: keep text files as LF in the repository and on checkout.
+* text=auto eol=lf
+
+# Windows scripts, if added later, keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets should never be line-ending converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary

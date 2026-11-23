@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0e1b2c">
+  <meta name="description" content="N 皇后问题交互式可视化：回溯法与最小冲突局部搜索，支持单步、调速、解画廊和实时统计。">
+  <title>N 皇后 · 回溯与最小冲突 | N-Queens Lab</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e1b2c'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='Georgia,serif' font-size='42' fill='%23f4ebdd'%3E%E2%99%9B%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="page-glow page-glow-a" aria-hidden="true"></div>
+  <div class="page-glow page-glow-b" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="./index.html" aria-label="N-Queens Lab 首页">
+      <span class="brand-mark" aria-hidden="true">♛</span>
+      <span class="brand-copy">
+        <strong>N-QUEENS</strong>
+        <small>LAB / 算法可视化</small>
+      </span>
+    </a>
+
+    <nav class="mode-tabs" aria-label="算法模式">
+      <button class="mode-tab is-active" type="button" data-mode="backtracking" aria-pressed="true">
+        <span class="tab-index">01</span>
+        回溯法
+      </button>
+      <button class="mode-tab" type="button" data-mode="local" aria-pressed="false">
+        <span class="tab-index">02</span>
+        最小冲突
+      </button>
+    </nav>
+
+    <div class="top-state">
+      <span class="pulse-dot" aria-hidden="true"></span>
+      <span>本地运行 · 无需后端</span>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero" aria-labelledby="pageTitle">
+      <div class="hero-copy">
+        <p class="eyebrow">CONSTRAINT SATISFACTION <span>/</span> N = <b id="heroN">8</b></p>
+        <h1 id="pageTitle">八个皇后，<br><em>彼此看不见。</em></h1>
+        <p class="lede">
+          在棋盘上放 N 个皇后，让任意两个都不同行、不同列、不同斜线。
+          用两种完全不同的算法，把“搜索”变成看得见的过程。
+        </p>
+      </div>
+      <div class="hero-side" aria-label="八皇后关键数据">
+        <div class="hero-fact">
+          <span class="fact-value" id="heroSolutions">92</span>
+          <span class="fact-label" id="heroSolutionLabel">N = 8 时解的总数</span>
+        </div>
+        <div class="hero-fact">
+          <span class="fact-value" id="heroDistinct">12</span>
+          <span class="fact-label">旋转 / 镜像后本质不同</span>
+        </div>
+        <div class="hero-rule"><span aria-hidden="true">♛</span> 每行一个 · 每列一个 · 斜线不相遇</div>
+      </div>
+    </section>
+
+    <section class="workspace" aria-label="算法演示工作区">
+      <section class="card board-card">
+        <div class="card-head board-head">
+          <div>
+            <p class="card-kicker" id="boardKicker">BACKTRACKING / 01</p>
+            <h2 id="boardTitle">逐行放置，走不通就退回</h2>
+          </div>
+          <span class="status-pill" id="statusPill"><i aria-hidden="true"></i><span id="statusText">待运行</span></span>
+        </div>
+
+        <div class="board-shell">
+          <div class="corner" aria-hidden="true"></div>
+          <div class="col-labels" id="colLabels" aria-hidden="true"></div>
+          <div class="row-labels" id="rowLabels" aria-hidden="true"></div>
+          <div class="board-area">
+            <div class="board" id="board" role="grid" aria-label="N 皇后棋盘"></div>
+            <svg class="overlay" id="overlay" viewBox="0 0 8 8" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <div class="board-flash" id="boardFlash" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="board-foot">
+          <div class="legend" aria-label="棋盘图例">
+            <span><i class="dot coral" aria-hidden="true"></i> 冲突</span>
+            <span><i class="dot gold" aria-hidden="true"></i> 当前尝试</span>
+            <span><i class="dot teal" aria-hidden="true"></i> 合法解</span>
+          </div>
+          <p class="board-hint" id="boardHint">点击“开始”自动演示，或“单步”逐帧观察。</p>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="card control-card">
+          <div class="card-head compact">
+            <div><p class="card-kicker">CONTROL</p><h2>运行控制</h2></div>
+            <span class="mini-badge" id="modeBadge">回溯</span>
+          </div>
+
+          <div class="control-grid">
+            <label class="field">
+              <span>棋盘规模</span>
+              <select id="nSelect" aria-label="棋盘规模">
+                <option value="4">4 × 4</option>
+                <option value="5">5 × 5</option>
+                <option value="6">6 × 6</option>
+                <option value="7">7 × 7</option>
+                <option value="8" selected>8 × 8</option>
+                <option value="9">9 × 9</option>
+                <option value="10">10 × 10</option>
+              </select>
+            </label>
+
+            <label class="field" id="solutionModeField">
+              <span>目标</span>
+              <select id="solutionMode" aria-label="搜索目标">
+                <option value="first" selected>第一个解</option>
+                <option value="all">全部解</option>
+              </select>
+            </label>
+
+            <label class="field" id="seedField" hidden>
+              <span>随机种子</span>
+              <input id="seedInput" type="number" value="2026" min="0" step="1" inputmode="numeric" aria-label="随机种子">
+            </label>
+
+            <label class="field speed-field">
+              <span>速度 <b id="speedLabel">中速</b></span>
+              <input id="speedRange" type="range" min="0" max="4" step="1" value="2" aria-label="演示速度">
+            </label>
+          </div>
+
+          <div class="button-row">
+            <button class="btn btn-primary" id="playBtn" type="button">
+              <span class="btn-icon" id="playIcon" aria-hidden="true">▶</span>
+              <span id="playLabel">开始</span>
+            </button>
+            <button class="btn btn-ghost" id="stepBtn" type="button">单步</button>
+            <button class="btn btn-icon-only" id="resetBtn" type="button" aria-label="重置演示" title="重置">↺</button>
+          </div>
+          <p class="key-hint">空格 播放 / 暂停 · → 单步 · R 重置</p>
+        </section>
+
+        <section class="card stats-card">
+          <div class="card-head compact">
+            <div><p class="card-kicker">LIVE METRICS</p><h2>实时数据</h2></div>
+            <span class="live-mark">LIVE</span>
+          </div>
+          <div class="stats-grid" id="statsGrid"></div>
+        </section>
+
+        <section class="card action-card" aria-live="polite">
+          <div class="action-top">
+            <span class="event-tag" id="eventTag">READY</span>
+            <span class="event-count" id="eventCount">0 事件</span>
+          </div>
+          <h3 id="actionTitle">准备开始</h3>
+          <p id="actionText">选择规模后点击“开始”，观察皇后如何被放置、剪枝和撤销。</p>
+
+          <div class="candidate-wrap" id="candidateWrap" hidden>
+            <div class="candidate-head"><span>本行候选列冲突数</span><b id="candidateBest">最小 0</b></div>
+            <div class="candidates" id="candidates"></div>
+          </div>
+
+          <div class="spark-wrap" id="sparkWrap" hidden>
+            <div class="spark-head"><span>冲突数变化</span><b id="sparkNow">0</b></div>
+            <svg class="sparkline" id="sparkline" viewBox="0 0 320 64" preserveAspectRatio="none" aria-label="冲突数变化曲线"></svg>
+          </div>
+        </section>
+
+        <section class="card code-card">
+          <div class="card-head compact">
+            <div><p class="card-kicker">PSEUDOCODE</p><h2 id="codeTitle">搜索骨架</h2></div>
+            <span class="code-lang">JS</span>
+          </div>
+          <pre class="code" id="codeBlock"></pre>
+        </section>
+      </aside>
+    </section>
+
+    <section class="gallery-section" id="gallerySection" aria-labelledby="galleryTitle">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">SOLUTION ARCHIVE</p>
+          <h2 id="galleryTitle">解画廊 <span id="galleryCount">0</span></h2>
+        </div>
+        <p>每找到一个解，就收进这里。点击缩略图可以回看。</p>
+      </div>
+      <div class="gallery" id="gallery">
+        <div class="gallery-empty" id="galleryEmpty">还没有解。点击“开始”，让搜索跑起来。</div>
+      </div>
+    </section>
+
+    <section class="compare-section" aria-labelledby="compareTitle">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">THE TRADE-OFF</p>
+          <h2 id="compareTitle">同一张棋盘，两种哲学</h2>
+        </div>
+        <p>不是谁替代谁，而是它们回答的问题不同。</p>
+      </div>
+
+      <div class="compare-grid">
+        <article class="compare-card compare-backtrack">
+          <span class="compare-no">01</span>
+          <h3>回溯法</h3>
+          <p class="compare-sub">系统地试，及时地退。</p>
+          <p>从空棋盘开始，逐行构造；一旦冲突就剪枝，走不通就撤销最后一步。它会穷尽所有可能，所以不会漏解。</p>
+          <div class="compare-metrics">
+            <span><b>92</b> 全部解</span>
+            <span><b>2,056</b> 有效结点</span>
+            <span><b>O(n!)</b> 最坏时间</span>
+          </div>
+          <p class="compare-note">适合：小规模、全部解、证明无解。</p>
+        </article>
+
+        <article class="compare-card compare-local">
+          <span class="compare-no">02</span>
+          <h3>最小冲突</h3>
+          <p class="compare-sub">先摆满，再修好。</p>
+          <p>从一个完整但可能冲突的局面出发，每次只移动一个冲突皇后，让冲突数下降。它不枚举，所以快，但不保证成功。</p>
+          <div class="compare-metrics">
+            <span><b>数十步</b> 通常收敛</span>
+            <span><b>O(n)</b> 每步检查</span>
+            <span><b>启发式</b> 非完备</span>
+          </div>
+          <p class="compare-note">适合：大规模、只要一个可行解。</p>
+        </article>
+      </div>
+
+      <div class="decision-strip">
+        <span class="decision-label">怎么选？</span>
+        <span>要全部解 / 证明无解 <b>→ 回溯</b></span>
+        <span>只要一个解 / n 很大 <b>→ 局部搜索</b></span>
+        <span>要稳定复现 <b>→ 固定种子 + 多次重启</b></span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>N-QUEENS LAB</span>
+    <span>Pure HTML / CSS / JavaScript · 无依赖 · 可离线运行</span>
+    <span>8 × 8 · 92 solutions</span>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="./solver.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
